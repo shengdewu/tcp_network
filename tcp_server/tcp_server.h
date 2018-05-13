@@ -21,5 +21,6 @@ protected:
 
 private:
 	std::map<int, std::shared_ptr<session>> _connected; //<Ì×½Ó×Ö£¬»á»°>
+	shared_ptr<acceptor> _acceptor;
 };
 

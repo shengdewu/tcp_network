@@ -1,7 +1,8 @@
 #include "tcp_server.h"
-
+#include "acceptor.h"
 
 tcp_server::tcp_server()
+:_acceptor(make_shared<acceptor>(std::bind(&tcp_server::handle_new_connected, this, std::placehoder::1_)))
 {
 }
 
