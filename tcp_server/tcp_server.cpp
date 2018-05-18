@@ -13,7 +13,7 @@ tcp_server::~tcp_server()
 
 bool tcp_server::init_tcp(std::string ip, unsigned int port)
 {
-
+	return _acceptor->start(ip, port);
 }
 
 void tcp_server::handle_new_connected(int fd)

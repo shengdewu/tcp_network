@@ -62,6 +62,9 @@ void acceptor::loop()
 			continue;
 		}
 
+		int flags = fcntl(client_fd, F_GETFL, 0);
+		fcnt(client_fd, F_SETFL, flags|O_NONBLOCK);
+		
 		char client_ip[INET_ADDRSTRLEN] ={'\0'};
 		inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, sizeof(cleint_ip));
 		std::cout << "accept [" << client_ip <<":" << ntohs(client_addr.sin_port) << "] conected " << std::endl;
