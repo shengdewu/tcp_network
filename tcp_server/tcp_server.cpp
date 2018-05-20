@@ -1,8 +1,14 @@
+#include <functional>
+#include <sys/epoll.h>
 #include "tcp_server.h"
 #include "acceptor.h"
+#include "event_loop.h"
+#include "session.h"
+
 
 tcp_server::tcp_server()
-:_acceptor(make_shared<acceptor>(std::bind(&tcp_server::handle_new_connected, this, std::placehoder::1_)))
+:_acceptor(std::make_shared<acceptor>(std::bind(&tcp_server::handle_new_connected, this, std::placeholders::_1))),
+ _event_loop(std::make_shared<event_loop>())
 {
 }
 
@@ -24,10 +30,8 @@ void tcp_server::handle_new_connected(int fd)
 		return;
 	}
 
-	_connected[fd] = create_session(fd);
+	_connected[fd]  = create_session(fd);
+
+	_event_loop->register_event(_connected[fd], EPOLLIN|EPOLLOUT|EPOLLET);
 }
 
-std::shared_ptr<session> tcp_server::create_session(int fd)
-{
-	return std::make_shared<session>(fd);
-}

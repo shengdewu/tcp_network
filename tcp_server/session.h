@@ -4,7 +4,7 @@
 class session
 {
 public:
-	session();
+	session(int fd);
 	virtual ~session();
 
 	//��д�¼�����
@@ -13,6 +13,8 @@ public:
 
 	void send(std::shared_ptr<char*> data, unsigned int size);
 
+	inline int fd(){return _fd;}
+	
 protected:
 	//��д����
 	virtual bool handle_read_event(char *data, unsigned int size) = 0;

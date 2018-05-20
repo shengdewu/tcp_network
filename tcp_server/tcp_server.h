@@ -10,17 +10,18 @@ class tcp_server
 public:
 	tcp_server();
 	~tcp_server();
-	//Æô¶¯·þÎñÆ÷
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	bool init_tcp(std::string ip, unsigned int port);
 
 protected:
-	//´¦ÀíÐÂÁ¬½Ó
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	void handle_new_connected(int fd);
-	//´´½¨»á»°
-	virtual std::shared_ptr<session> create_session(int fd);
+	//ï¿½ï¿½ï¿½ï¿½ï¿½á»°
+	virtual std::shared_ptr<session> create_session(int fd) = 0;
 
 private:
-	std::map<int, std::shared_ptr<session>> _connected; //<Ì×½Ó×Ö£¬»á»°>
-	shared_ptr<acceptor> _acceptor;
+	std::map<int, std::shared_ptr<session>> _connected; //<ï¿½×½ï¿½ï¿½Ö£ï¿½ï¿½á»°>
+	std::shared_ptr<acceptor> _acceptor;
+	std::shared_ptr<event_loop> _event_loop;
 };
 

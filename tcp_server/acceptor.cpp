@@ -2,6 +2,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <iostream>
 
 acceptor::acceptor(new_connect notify)
 :_notify_con(notify),
@@ -56,17 +60,17 @@ void acceptor::loop()
 		//accept
 		struct sockaddr_in client_addr;
 		int len = sizeof(client_addr);
-		int client_fd = accept(_listen_fd, (struct sockaddr*)(&client_addr),&len);
+		int client_fd = accept(_listen_fd, (struct sockaddr*)(&client_addr),(socklen_t*)(&len));
 		if(client_fd < 0) 
 		{
 			continue;
 		}
 
 		int flags = fcntl(client_fd, F_GETFL, 0);
-		fcnt(client_fd, F_SETFL, flags|O_NONBLOCK);
+		fcntl(client_fd, F_SETFL, flags|O_NONBLOCK);
 		
 		char client_ip[INET_ADDRSTRLEN] ={'\0'};
-		inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, sizeof(cleint_ip));
+		inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, sizeof(client_ip));
 		std::cout << "accept [" << client_ip <<":" << ntohs(client_addr.sin_port) << "] conected " << std::endl;
 		
 		notify_new_connect(client_fd);

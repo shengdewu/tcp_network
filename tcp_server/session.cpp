@@ -1,7 +1,8 @@
 #include "session.h"
-#include "unistd.h"
+#include <unistd.h>
 
-session::session()
+session::session(int fd)
+:_fd(fd)
 {
 }
 
