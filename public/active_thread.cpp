@@ -24,7 +24,7 @@ active_thread::~active_thread()
 
 void active_thread::post(thread_func func)
 {
-	std::lock_guard<std::mutex> guard((_task_mtx));
+	std::lock_guard<std::mutex> guard(_task_mtx);
 	_task_queue.emplace_back(func);
 	_condition.notify_one();
 }

@@ -1,25 +1,29 @@
 #pragma once
+#include <memory>
+
 class session
 {
 public:
 	session();
 	virtual ~session();
 
-	//¶ÁÐ´ÊÂ¼þ´¦Àí
+	//ï¿½ï¿½Ð´ï¿½Â¼ï¿½ï¿½ï¿½ï¿½ï¿½
 	void notify_read_event();
 	void notify_write_event();
 
+	void send(std::shared_ptr<char*> data, unsigned int size);
+
 protected:
-	//¶ÁÐ´Êý¾Ý
-	virtual bool handle_read_event() = 0;
+	//ï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½
+	virtual bool handle_read_event(char *data, unsigned int size) = 0;
 	virtual bool handle_write_event() = 0;
 
 private:
-	//×¢²á¶ÁÐ´ÊÂ¼þ
+	//×¢ï¿½ï¿½ï¿½Ð´ï¿½Â¼ï¿½
 	void post_read_event();
 	void post_write_event();
 
 private:
-	int	_fd;   //Ì×½Ó×Ö
+	int	_fd;   //ï¿½×½ï¿½ï¿½ï¿½
 };
 

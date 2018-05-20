@@ -1,21 +1,34 @@
 #pragma once
 #include <map>
 #include <memory>
+#include <vector>
+#include <mutex>
 
 class session;
+class active_thread;
 class event_loop
 {
 public:
-	event_loop();
+	event_loop(int max_thread = 4);
 	~event_loop();
 	event_loop(const event_loop &loop) = delete;
 
-	//ÊÂ¼şÑ­»·
+	//äº‹ä»¶å¾ªç¯
 	void loop();
-	//×¢²áÊÂ¼ş
-	bool register_event();
+	//æ³¨å†Œäº‹ä»¶
+	bool register_event(std::shared_ptr<session> ses, int event);
+	//åˆ é™¤äº‹ä»¶
+	bool unregister_event(std::shared_ptr<session> ses, int event);
 
 private:
-	std::map<int, std::shared_ptr<session>>  _handler;  //<<Ì×½Ó×Ö£¬ÊÂ¼ş¾ä±ú>>
+	bool update_event(int op, int fd, int event_opt);
+
+private:
+	std::map<int, std::shared_ptr<session>>  _handler;  //<<socket, clientsession>>
+	int _event_fd;  //äº‹ä»¶æ§åˆ¶æè¿°ç¬¦ epoll_create
+	int _wake_up_fd; //å”¤é†’epoll_wait
+	std::shared_ptr<active_thread>  _active_thread;
+	bool _exit;
+	std::mutex _lck_handler;
 };
 
