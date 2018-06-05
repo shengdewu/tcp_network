@@ -25,8 +25,7 @@ private:
 	std::map<int, std::shared_ptr<session>>  _handler;  //<<socket, clientsession>>
 	int _event_fd;  //epoll_create
 	int _wake_up_fd; //wake_up_fd for epoll_wait
-	std::shared_ptr<active_thread>  _active_thread;
-	bool _exit;
+	std::vector<std::shared_ptr<active_thread>>  _active_thread;
 	std::mutex _lck_handler;
 };
 

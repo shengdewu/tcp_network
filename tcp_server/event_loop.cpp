@@ -1,6 +1,6 @@
 #include "event_loop.h"
 #include <sys/socket.h>
-#include "active_thread.h"
+#include "_active_thread.h"
 #include <sys/epoll.h>
 #include <errno.h>
 #include "session.h"
@@ -12,56 +12,55 @@
 
 event_loop::event_loop(int max_thread)
 	:_event_fd(epoll_create(EPOLL_CLOEXEC)),
-	_active_thread(std::make_shared<active_thread>(max_thread)),
 	_exit(false)
 {
-	_active_thread->post(std::bind(&event_loop::loop, this));
+	for(int i =0; i<max_thread; ++i)
+	{
+		_active_thread.emplace_back(std::make_shared<active_thread>(std::bind(&event_loop::loop, this)));
+	}
 }
 
 
 event_loop::~event_loop()
 {
-	_exit = true;
 	//wake up wait
+	_active_thread.clear();
 }
 
 void event_loop::loop()
 {
-	while(!_exit)
+	std::vector<struct epoll_event> events(MAX_EVENTS_SIZE);
+	int nfd = epoll_wait(_event_fd, &*events.begin(), events.size(), 10000);
+	if(nfd > 0)
 	{
-		std::vector<struct epoll_event> events(MAX_EVENTS_SIZE);
-		int nfd = epoll_wait(_event_fd, &*events.begin(), events.size(), 10000);
-		if(nfd > 0)
+		for(int i=0; i<nfd; ++i)
 		{
-			for(int i=0; i<nfd; ++i)
+			auto it = _handler.find(events[i].data.fd);
+			if(it == _handler.end())
 			{
-				auto it = _handler.find(events[i].data.fd);
-				if(it == _handler.end())
-				{
-					continue;
-				}
+				continue;
+			}
 
-				switch (events[i].events)
-				{
-					case EPOLLIN:
-						it->second->notify_read_event();
-					break;
-					case EPOLLOUT:
-						it->second->notify_write_event();
-					break;
-					default:
-					break;
-				}
+			switch (events[i].events)
+			{
+				case EPOLLIN:
+					it->second->notify_read_event();
+				break;
+				case EPOLLOUT:
+					it->second->notify_write_event();
+				break;
+				default:
+				break;
 			}
 		}
-		else if(nfd == 0)
-		{
-			std::cout << "event_loop::loop have nothing." << errno << std::endl;
-		}
-		else
-		{
-			std::cout << "event_loop::loop" << errno << std::endl;
-		}
+	}
+	else if(nfd == 0)
+	{
+		std::cout << "event_loop::loop have nothing." << errno << std::endl;
+	}
+	else
+	{
+		std::cout << "event_loop::loop" << errno << std::endl;
 	}
 }
 
