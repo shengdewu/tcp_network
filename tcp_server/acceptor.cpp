@@ -2,9 +2,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <errno>
-#include <string.h> //for strerror()
+#include <string.h>
+#include <unistd.h>
 #include <fcntl.h>
+#include <iostream>
 
 acceptor::acceptor(new_connect notify)
 :_notify_con(notify),
@@ -24,47 +25,56 @@ bool acceptor::start(std::string ip, unsigned int port)
 	_listen_fd = socket(AF_INET, SOCK_STREAM, 0);
 
 	struct sockaddr_in addr;
-	bzero(&addr, sizeof(struct sockaddr_in));
+	memset(&addr, 0, sizeof(struct sockaddr_in));
 	addr.sin_family = AF_INET;
-	inet_pton(AF_INET, ip.c_str(), &addr.sin_addr);
+	addr.sin_addr.s_addr = htons(INADDR_ANY);
 	addr.sin_port = htons(port);
 	//bind
-	if(-1 == bind(_listen_fd, &addr, sizeof(addr)))
+	if(!bind(_listen_fd, (struct sockaddr*)(&addr),sizeof(addr)))
 	{
-		std::cout << "bind socket is failed " << strerror(errno) << std::endl;
-		close(_listen_fd);
+		std::cout << "bind [" << ip <<":"<<port<<"] failed" << std::endl;
+		return false;
 	}
 	//listen
-
+	if(!listen(_listen_fd, 5))
+	{
+		std::cout << "listen" << ip <<":"<<port<<"] failed" << std::endl;
+		return false;
+	}
 	_exit = false;
 	_listen_th = std::thread(std::bind(&acceptor::loop, this));
 }
 
 void acceptor::stop()
 {
-	close(_listen_fd);
 	_exit = true;
-	_listen_th.join();	
+	shutdown(_listen_fd, SHUT_WR);
+	close(_listen_fd);
+	_listen_th.join();
 }
 
 void acceptor::loop()
 {
 	while (!_exit)
 	{
-		struct sockaddr_in addr;
-		bzero(&addr, sizeof(struct sockaddr_in));
-		int len = sizeof(addr);
-		
-		int client = accept(_listen_fd, (sockaddr*)&addr, &len);
-		if(client < 0)
+		//accept
+		struct sockaddr_in client_addr;
+		int len = sizeof(client_addr);
+		int client_fd = accept(_listen_fd, (struct sockaddr*)(&client_addr),(socklen_t*)(&len));
+		if(client_fd < 0) 
 		{
-			std::cout << "accept socket is failed " << strerror(errno) << std::endl;
+			continue;
 		}
 
-		char ip[20] = {'\0'};
-		inet_ntop(AF_INET, &addr, ip, 20);
-		std::cout << "ip:"<< ip << "-port:"<< ntohs(addr.sin_port) << " connect the server."<< std::endl;
-		notify_new_connect(client);
+		int flags = fcntl(client_fd, F_GETFL, 0);
+		fcntl(client_fd, F_SETFL, flags|O_NONBLOCK);
+		
+		char client_ip[INET_ADDRSTRLEN] ={'\0'};
+		inet_ntop(AF_INET, &client_addr.sin_addr, client_ip, sizeof(client_ip));
+		std::cout << "accept [" << client_ip <<":" << ntohs(client_addr.sin_port) << "] conected " << std::endl;
+		
+		notify_new_connect(client_fd);
+		
 	}
 }
 
@@ -72,10 +82,6 @@ void acceptor::notify_new_connect(int cfd)
 {
 	if (_notify_con)
 	{
-		int old=fcntl(fd,F_GETFL);
-		int newfd=old|O_NONBLOCK;
-		fcntl(client,F_SETFL,newfd);
-
 		_notify_con(cfd);
 	}
 }

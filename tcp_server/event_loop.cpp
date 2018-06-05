@@ -1,21 +1,100 @@
 #include "event_loop.h"
+#include <sys/socket.h>
+#include "active_thread.h"
+#include <sys/epoll.h>
+#include <errno.h>
+#include "session.h"
+#include <string.h>
 
+#include <iostream>
 
-event_loop::event_loop()
+#define MAX_EVENTS_SIZE 32
+
+event_loop::event_loop(int max_thread)
+	:_event_fd(epoll_create(EPOLL_CLOEXEC)),
+	_active_thread(std::make_shared<active_thread>(max_thread)),
+	_exit(false)
 {
+	_active_thread->post(std::bind(&event_loop::loop, this));
 }
 
 
 event_loop::~event_loop()
 {
+	_exit = true;
+	//wake up wait
 }
 
 void event_loop::loop()
 {
+	while(!_exit)
+	{
+		std::vector<struct epoll_event> events(MAX_EVENTS_SIZE);
+		int nfd = epoll_wait(_event_fd, &*events.begin(), events.size(), 10000);
+		if(nfd > 0)
+		{
+			for(int i=0; i<nfd; ++i)
+			{
+				auto it = _handler.find(events[i].data.fd);
+				if(it == _handler.end())
+				{
+					continue;
+				}
 
+				switch (events[i].events)
+				{
+					case EPOLLIN:
+						it->second->notify_read_event();
+					break;
+					case EPOLLOUT:
+						it->second->notify_write_event();
+					break;
+					default:
+					break;
+				}
+			}
+		}
+		else if(nfd == 0)
+		{
+			std::cout << "event_loop::loop have nothing." << errno << std::endl;
+		}
+		else
+		{
+			std::cout << "event_loop::loop" << errno << std::endl;
+		}
+	}
 }
 
-bool event_loop::register_event()
+bool event_loop::register_event(std::shared_ptr<session> ses, int event)
 {
-	return false;
+	std::lock_guard<std::mutex> guard(_lck_handler);
+	auto it = _handler.find(ses->fd());
+	if(_handler.end() == it)
+	{
+		update_event(EPOLL_CTL_ADD, ses->fd(), event);
+		_handler.insert(std::make_pair(ses->fd(), ses));
+	}
+	else
+	{
+		update_event(EPOLL_CTL_MOD, ses->fd(), event);
+	}	
+}
+
+bool event_loop::unregister_event(std::shared_ptr<session> ses, int event)
+{
+	std::lock_guard<std::mutex> guard(_lck_handler);
+	auto it = _handler.find(ses->fd());
+	if(_handler.end() != it)
+	{
+		update_event(EPOLL_CTL_DEL, ses->fd(), event);
+		_handler.erase(it);
+	}
+}
+
+bool event_loop::update_event(int op, int fd, int event_opt)
+{
+	struct epoll_event event;
+	bzero(&event, sizeof(event));
+	event.events = event_opt;
+	epoll_ctl(_event_fd, op, fd, &event);
 }
