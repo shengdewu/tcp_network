@@ -5,21 +5,21 @@ public:
 	session();
 	virtual ~session();
 
-	//¶ÁĞ´ÊÂ¼ş´¦Àí
+	//è¯»å†™äº‹ä»¶å¤„ç†
 	void notify_read_event();
 	void notify_write_event();
 
 protected:
-	//¶ÁĞ´Êı¾İ
+	//è¯»å†™æ•°æ®
 	virtual bool handle_read_event() = 0;
 	virtual bool handle_write_event() = 0;
 
 private:
-	//×¢²á¶ÁĞ´ÊÂ¼ş
+	//æ³¨å†Œè¯»å†™äº‹ä»¶
 	void post_read_event();
 	void post_write_event();
 
 private:
-	int	_fd;   //Ì×½Ó×Ö
+	int	_fd;   //å¥—æ¥å­—
 };
 

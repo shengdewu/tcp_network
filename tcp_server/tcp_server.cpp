@@ -1,4 +1,5 @@
 #include "tcp_server.h"
+#include "acceptor.h"
 
 
 tcp_server::tcp_server()
@@ -8,11 +9,21 @@ tcp_server::tcp_server()
 
 tcp_server::~tcp_server()
 {
+	if(_acceptor)
+	{
+		_acceptor.stop();
+	}
 }
 
 bool tcp_server::init_tcp(std::string ip, unsigned int port)
 {
+	if(!_acceptor)
+	{
+		return true;
+	}
 
+	_acceptor = make_shared<acceptor>(std::bind(&tcp_server::handle_new_connected, this, std::placeholders::_1));
+	_acceptor->start(ip, port);
 }
 
 void tcp_server::handle_new_connected(int fd)

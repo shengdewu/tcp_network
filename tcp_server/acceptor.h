@@ -11,15 +11,15 @@ public:
 	acceptor(new_connect notify = nullptr);
 	virtual ~acceptor();
 
-	//监听
+	//鐩戝惉
 	bool start(std::string ip, unsigned int port);
 	
 	void stop();
 
 protected:
-	//监听事件循环线程
+	//鐩戝惉浜嬩欢寰幆绾跨▼
 	void loop();
-	//新连接，通知接口
+	//鏂拌繛鎺ワ紝閫氱煡鎺ュ彛
 	void notify_new_connect(int cfd);
 
 private:
