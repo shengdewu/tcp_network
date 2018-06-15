@@ -19,7 +19,9 @@ public:
 	bool unregister_event(std::shared_ptr<session> ses, int event);
 
 private:
-	bool update_event(int op, int fd, int event_opt);
+	bool update_event(int op, int fd, int event_opt, bool once = true);
+	void init_delete_epoll();
+	void delete_epoll();
 
 private:
 	std::map<int, std::shared_ptr<session>>  _handler;  //<<socket, clientsession>>

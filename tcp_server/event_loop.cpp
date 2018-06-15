@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include "_active_thread.h"
 #include <sys/epoll.h>
+#include <sys/eventfd.h>
 #include <errno.h>
 #include "session.h"
 #include <string.h>
@@ -18,6 +19,8 @@ event_loop::event_loop(int max_thread)
 	{
 		_active_thread.emplace_back(std::make_shared<active_thread>(std::bind(&event_loop::loop, this)));
 	}
+
+	init_delete_epoll();
 }
 
 
@@ -90,10 +93,32 @@ bool event_loop::unregister_event(std::shared_ptr<session> ses, int event)
 	}
 }
 
-bool event_loop::update_event(int op, int fd, int event_opt)
+bool event_loop::update_event(int op, int fd, int event_opt, bool once )
 {
 	struct epoll_event event;
 	bzero(&event, sizeof(event));
 	event.events = event_opt;
+	if(bool)
+	{
+		event.events |= (EPOLLET | EPOLLONESHOT);
+	}
 	epoll_ctl(_event_fd, op, fd, &event);
+}
+
+bool event_loop::init_delete_epoll()
+{
+	_wake_up_fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if(_wake_up_fd < 0)
+	{
+		std::cout << "init_delete_epoll::loop" << errno << std::endl;
+		return false;
+	}
+	update_event(EPOLL_CTL_ADD, _wake_up_fd, EPOLLIN, false);
+
+	return true;
+}
+
+void event_loop::delete_epoll()
+{
+	//write(_wake_up_fd, )
 }
