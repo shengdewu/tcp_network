@@ -16,10 +16,10 @@ public:
 	//event loop
 	void loop();
 	bool register_event(std::shared_ptr<session> ses, int event)
-	bool unregister_event(std::shared_ptr<session> ses, int event);
+	bool unregister_event(int fd);
+	bool update_event(int op, int fd, int event_opt, bool once = true);
 
 private:
-	bool update_event(int op, int fd, int event_opt, bool once = true);
 	void init_delete_epoll();
 	void delete_epoll();
 

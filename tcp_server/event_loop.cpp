@@ -26,8 +26,8 @@ event_loop::event_loop(int max_thread)
 
 event_loop::~event_loop()
 {
-	//wake up wait
 	_active_thread.clear();
+	delete_epoll();
 }
 
 void event_loop::loop()
@@ -82,13 +82,13 @@ bool event_loop::register_event(std::shared_ptr<session> ses, int event)
 	}	
 }
 
-bool event_loop::unregister_event(std::shared_ptr<session> ses, int event)
+bool event_loop::unregister_event(int fd);
 {
 	std::lock_guard<std::mutex> guard(_lck_handler);
-	auto it = _handler.find(ses->fd());
+	auto it = _handler.find(fd);
 	if(_handler.end() != it)
 	{
-		update_event(EPOLL_CTL_DEL, ses->fd(), event);
+		update_event(EPOLL_CTL_DEL, fd, 0);
 		_handler.erase(it);
 	}
 }
@@ -98,7 +98,7 @@ bool event_loop::update_event(int op, int fd, int event_opt, bool once )
 	struct epoll_event event;
 	bzero(&event, sizeof(event));
 	event.events = event_opt;
-	if(bool)
+	if(once)
 	{
 		event.events |= (EPOLLET | EPOLLONESHOT);
 	}
@@ -120,5 +120,9 @@ bool event_loop::init_delete_epoll()
 
 void event_loop::delete_epoll()
 {
-	//write(_wake_up_fd, )
+	int one = 1;
+	if(sizeof(one) != send(_wake_up_fd, &one, siezof(one)))
+	{
+		std::cout << "delete_epoll failed" << errno << std::endl;
+	}
 }

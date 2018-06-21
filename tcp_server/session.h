@@ -1,18 +1,20 @@
 #pragma once
 #include <memory>
 
+class tcp_server;
+class event_loop;
 class session
 {
 public:
-	session(int fd);
+	session(int fd, tcp_server *tcp_server, event_loop *event);
 	virtual ~session();
 
 	void notify_read_event();
 	void notify_write_event();
 
-	void send(std::shared_ptr<char*> data, unsigned int size);
+	void send(std::string data, unsigned int size);
 
-	inline int fd(){return _fd;}
+	inline int fd();
 	
 protected:
 	//read/write operator
@@ -25,6 +27,16 @@ private:
 	void post_write_event();
 
 private:
-	int	_fd;   //�׽���
+	int	_fd;   //client fd
+	tcp_serve *_tcp_server;
+	event_loop *_event_loop;
 };
+
+///
+//inline
+//
+inline int session::fd()
+{
+	return _fd;
+}
 
