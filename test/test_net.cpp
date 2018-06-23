@@ -13,13 +13,10 @@ private:
 
 	virtual bool handle_read_event(char *data, unsigned int size) override 
     {
+        std::cout << __FILE__ << ", " << __LINE__ << std::string(data, size) << std::endl;
         return false;
     }
 
-	virtual bool handle_write_event() override
-    {
-        return false;
-    }
 };
 
 class tcp_network : public tcp_server

@@ -13,8 +13,12 @@ session::~session()
 {
 }
 
-void session::send(std::string data, unsigned int size)
+void session::send(std::shared_ptr<char> data, unsigned int size)
 {
+    data_unit udata(data, size);
+    _data_mtx.lock();
+    _data_pool.emplace_back(udata);
+    _data_mtx.unlock();
     post_write_event();
 }
 
@@ -39,8 +43,27 @@ void session::notify_read_event()
 
 void session::notify_write_event()
 {
-    char data[1024];
-    int size = write(_fd, data, sizeof(data));
+    if(!_data_pool.empty())
+    {
+        _data_mtx.lock();
+        data_unit udata = _data_pool.front();
+        _data_pool.pop_front();
+        _data_mtx.unlock();
+
+        std::shared_ptr<char> data = udata.data();
+        unsigned int length = udata.length();
+        if(length > 0)
+        {
+            int nsended = 0;
+            while(nsended != length)
+            {
+                int nsend = write(_fd, data.get() + nsended, length - nsended);
+                nsended += nsend;
+            }
+        }
+        
+    }
+    
 }
 
 

@@ -1,5 +1,7 @@
 #pragma once
-#include <memory>
+#include "data_unit.h"
+#include <deque>
+#include <mutex>
 
 class tcp_server;
 class event_loop;
@@ -12,14 +14,13 @@ public:
 	void notify_read_event();
 	void notify_write_event();
 
-	void send(std::string data, unsigned int size);
+	void send(std::shared_ptr<char> data, unsigned int size);
 
 	inline int fd();
 	
 protected:
 	//read/write operator
 	virtual bool handle_read_event(char *data, unsigned int size) = 0;
-	virtual bool handle_write_event() = 0;
 
 private:
 	//post read/write event to epoll
@@ -30,6 +31,9 @@ private:
 	int	_fd;   //client fd
 	tcp_serve *_tcp_server;
 	event_loop *_event_loop;
+	std::mutex  _data_mtx;
+	std::deque<data_unit>  _data_pool;
+	
 };
 
 ///
