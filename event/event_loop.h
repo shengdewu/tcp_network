@@ -1,0 +1,33 @@
+#pragma once
+#include <map>
+#include <memory>
+#include <vector>
+#include <mutex>
+
+class active_thread;
+class event_handler;
+class event_loop
+{
+public:
+	event_loop(int max_thread = 4);
+	~event_loop();
+	event_loop(const event_loop &loop) = delete;
+
+	//event loop
+	void loop();
+	bool register_event(std::shared_ptr<event_handler> ses, int event)
+	bool unregister_event(int fd);
+	bool update_event(int op, int fd, int event_opt, bool once = true);
+
+private:
+	void init_delete_epoll();
+	void delete_epoll();
+
+private:
+	std::map<int, std::shared_ptr<event_handler>>  _handler;  //<<socket, event_handler>>
+	int _event_fd;  //epoll_create
+	int _wake_up_fd; //wake_up_fd for epoll_wait
+	std::vector<std::shared_ptr<active_thread>>  _active_thread;
+	std::mutex _lck_handler;
+};
+
