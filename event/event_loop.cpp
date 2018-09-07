@@ -9,11 +9,10 @@
 
 #include <iostream>
 
-#define MAX_EVENTS_SIZE 32
+#define MAX_EVENTS_SIZE 10
 
 event_loop::event_loop(int max_thread)
-	:_event_fd(epoll_create(EPOLL_CLOEXEC)),
-	_exit(false)
+	:_event_fd(epoll_create(EPOLL_CLOEXEC))
 {
 	for(int i =0; i<max_thread; ++i)
 	{
@@ -26,65 +25,56 @@ event_loop::event_loop(int max_thread)
 
 event_loop::~event_loop()
 {
-	_active_thread.clear();
 	delete_epoll();
+	_active_thread.clear();
+	close(_event_fd);
 }
 
 void event_loop::loop()
 {
-	std::vector<struct epoll_event> events(MAX_EVENTS_SIZE);
-	int nfd = epoll_wait(_event_fd, &*events.begin(), events.size(), 10000);
+	struct epoll_event events[MAX_EVENTS_SIZE] = {0};
+	int nfd = epoll_wait(_event_fd, &events, MAX_EVENTS_SIZE, -1);
 	if(nfd > 0)
 	{
 		for(int i=0; i<nfd; ++i)
 		{
-			auto it = _handler.find(events[i].data.fd);
-			if(it == _handler.end())
+			shared_ptr<event_handler> handler = find_handler(events[i].data.fd);
+			if(handler)
 			{
-				continue;
-			}
-
-			switch (events[i].events)
-			{
-				case EPOLLIN:
-					it->second->notify_read_event();
-				break;
-				case EPOLLOUT:
-					it->second->notify_write_event();
-				break;
-				default:
-				break;
+				switch (events[i].events)
+				{
+					case EPOLLIN:
+						it->second->notify_read_event();
+						break;
+					case EPOLLOUT:
+						it->second->notify_write_event();
+						break;
+					case EPOLLHUP:
+					case EPOLLERR:
+						it->sceond->notify_error_event();
+						break;
+					default:
+					break;
+				}
 			}
 		}
 	}
-	else if(nfd == 0)
-	{
-		std::cout << "event_loop::loop have nothing." << errno << std::endl;
-	}
-	else
-	{
-		std::cout << "event_loop::loop" << errno << std::endl;
-	}
 }
 
-bool event_loop::register_event(std::shared_ptr<event_handler> ses, int event)
+bool event_loop::register_event(int fd, std::shared_ptr<event_handler> handler)
 {
-	std::lock_guard<std::mutex> guard(_lck_handler);
-	auto it = _handler.find(ses->fd());
+	auto_rwlock guard(&_lck_handler);
+	auto it = _handler.find(fd);
 	if(_handler.end() == it)
 	{
-		update_event(EPOLL_CTL_ADD, ses->fd(), event);
-		_handler.insert(std::make_pair(ses->fd(), ses));
+		update_event(EPOLL_CTL_ADD, fd, EPOLLIN);
+		_handler.insert(std::make_pair(fd, handler));
 	}
-	else
-	{
-		update_event(EPOLL_CTL_MOD, ses->fd(), event);
-	}	
 }
 
-bool event_loop::unregister_event(int fd);
+bool event_loop::delete_handler(int fd);
 {
-	std::lock_guard<std::mutex> guard(_lck_handler);
+	auto_rwlock guard(&_lck_handler);
 	auto it = _handler.find(fd);
 	if(_handler.end() != it)
 	{
@@ -125,4 +115,16 @@ void event_loop::delete_epoll()
 	{
 		std::cout << "delete_epoll failed" << errno << std::endl;
 	}
+}
+
+std::shared_ptr<event_handler> event_loop::find_handler(int fd)
+{
+	shared_ptr<event_handler> handler;
+	{
+		auto_rwlock guard(&_lck_handler, false);
+		auto it = _handler.find(fd);
+		handler = *it;
+	}
+
+	return handler;
 }

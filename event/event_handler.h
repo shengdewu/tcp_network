@@ -1,18 +1,75 @@
 #pragma once
 #include <memory>
-
-class event_loop;
+#include "event_loop.h"
+#include <actomic>
 class event_handler
 {
 public:
-    event_handler(std::shared_ptr<event_loop> loop);
+    event_handler(event_loop *loop, int efd):loop_(loop),efd_(efd),whandle_(false),rhandle_(true){}
 
-    virtual void notify_write_event() = 0;
-    virtual void notify_read_event() = 0;
+    //通知事件
+    inline void notify_write_event();
+    inline void notify_read_event();
+    inline void notify_error_event(){ handle_error_event(); };
 
-    virtual void post_write_event();
-    virtual void post_read_event();
+protected:
+    //处理通知事件
+    virtual bool handle_write_event() = 0;
+    virtual bool handle_read_event() = 0;
+    virtual void handle_error_event() = 0;
+
+private:
+    //投递读写事件
+    inline void post_write_event();
+    inline void post_read_event();
     
 private:
-    std::shared_ptr<event_loop> loop_;
+    event_loop *loop_;
+    int efd_;
+    actomic<bool> whandle_;
+    actomic<bool> rhandle_;
+}
+
+//
+//inline
+//
+
+inline void event_handler::notify_write_event()
+{
+    if(handle_write_event())
+    {
+        post_write_event();
+    }
+    else
+    {
+        handle_error_event();
+    }
+}
+
+inline void event_handler::notify_read_event()
+{
+    if(handle_read_event())
+    {
+        post_read_event();
+    }
+    else
+    {
+        handle_error_event();
+    }
+}
+
+inline void event_handler::post_write_event()
+{
+    whandle_ = true;
+
+    int opt = EPOLLOUT;
+    if(rhandle_)
+    {
+        opt |= EPOLLIN;
+    }
+}
+
+inline void event_handler::post_read_event()
+{
+
 }
