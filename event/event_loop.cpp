@@ -41,20 +41,20 @@ void event_loop::loop()
 			shared_ptr<event_handler> handler = find_handler(events[i].data.fd);
 			if(handler)
 			{
-				switch (events[i].events)
+				int events = events[i].events;
+				if(events & EPOLLIN)
 				{
-					case EPOLLIN:
-						it->second->notify_read_event();
-						break;
-					case EPOLLOUT:
-						it->second->notify_write_event();
-						break;
-					case EPOLLHUP:
-					case EPOLLERR:
-						it->sceond->notify_error_event();
-						break;
-					default:
-					break;
+					handler->notify_read_event();
+				}
+
+				if(events & EPOLLOUT)
+				{
+					handler->notify_write_event();
+				}
+
+				if(!(events & EPOLLIN) && (events & EPOLLERR || events & EPOLLHUP))
+				{
+					handler->notify_error_event();
 				}
 			}
 		}
