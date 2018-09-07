@@ -83,11 +83,11 @@ bool event_loop::delete_handler(int fd);
 	}
 }
 
-bool event_loop::update_event(int op, int fd, int event_opt, bool once )
+bool event_loop::update_event(int op, int fd, int events, bool once )
 {
 	struct epoll_event event;
 	bzero(&event, sizeof(event));
-	event.events = event_opt;
+	event.events = events;
 	if(once)
 	{
 		event.events |= (EPOLLET | EPOLLONESHOT);

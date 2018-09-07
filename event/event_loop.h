@@ -20,7 +20,7 @@ public:
 	//删除事件
 	bool delete_handler(int fd);
 	//更新事件
-	bool update_event(int op, int fd, int event_opt, bool once = true);
+	bool update_event(int op, int fd, int events, bool once = true);
 
 private:
 	void init_delete_epoll();

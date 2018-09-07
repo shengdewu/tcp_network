@@ -26,8 +26,7 @@ private:
 private:
     event_loop *loop_;
     int efd_;
-    actomic<bool> whandle_;
-    actomic<bool> rhandle_;
+    int events_;
 }
 
 //
@@ -60,16 +59,14 @@ inline void event_handler::notify_read_event()
 
 inline void event_handler::post_write_event()
 {
-    whandle_ = true;
-
-    int opt = EPOLLOUT;
-    if(rhandle_)
-    {
-        opt |= EPOLLIN;
-    }
+    events_ |= EPOLLOUT;
+    loop_->update_event(EPOLL_CTL_MOD, efd_, events_);
+    events_ &= ~EPOLLOUT;
 }
 
 inline void event_handler::post_read_event()
 {
-
+    events_ |= EPOLLIN;
+    loop_->update_event(EPOLL_CTL_MOD, efd_, events_);
+    events_ &= ~EPOLLIN;
 }
