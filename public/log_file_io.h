@@ -57,5 +57,17 @@ inline void log_file_io::create_file()
 
 inline void log_file_io::ensure_file_size()
 {
-
+    if(lseek(fd_, 0, SEEK_CUR) > MAX_FILE_SIZE)
+    {
+        std::unique_lock<std::mutex> lck(mtx_, std::defer_lock);
+        if(lck.try_lock())
+        {
+            path = dir + "/" + name_ + get_time_for_daytime() + type_ + ".txt";
+            int fd =::open(path.c_str(), O_RDWR|O_APPEND|O_CREAT|S_IRUSR|S_IWUSR|S_IWGRP|S_IROTH);
+            if(-1 != fd)
+            {
+                dup2(fd, fd_);
+            }              
+        }
+    }
 }
