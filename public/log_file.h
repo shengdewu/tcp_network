@@ -5,8 +5,10 @@
 */
 #include <stdarg.h>
 #include <memory>
+#include <map>
 #include "singleton.h"
 #include "log_file_io.h"
+
 
 enum class LOGI_TYPE
 {
@@ -19,7 +21,14 @@ enum class LOGI_TYPE
 class log_file
 {
 public:
-    log_file(std::string dir="log"):debug_(dir, get_process_name(), "debug"),warn_(dir, get_process_name(), "warn"),error_(dir, get_process_name(), "error"),log_lvl_(LOGI_TYPE::LOGI_DEBUG){ creat_dir(dir); }
+    log_file(std::string dir="log"):debug_(dir, get_process_name(), "debug"),warn_(dir, get_process_name(), "warn"),error_(dir, get_process_name(), "error"),log_lvl_(LOGI_TYPE::LOGI_DEBUG)
+    { 
+        creat_dir(dir); 
+        log_flag_.insert(std::make_pair(LOGI_TYPE::LOGI_DEBUG, "<DEBUG "));
+        log_flag_.insert(std::make_pair(LOGI_TYPE::LOG_INFO, "<INFO "));
+        log_flag_.insert(std::make_pair(LOGI_TYPE::LOGI_WARN, "<WARN "));
+        log_flag_.insert(std::make_pair(LOGI_TYPE::LOGI_ERROR, "<ERROR "));
+    }
     
     //日志
     inline void write_log(LOGI_TYPE log_lvl, const char *contxt, unsigned int length);
@@ -37,6 +46,7 @@ private:
     log_file_io warn_;
     log_file_io error_;
     LOGI_TYPE log_lvl_;
+    std::map<LOGI_TYPE, std::string> log_flag_;
 };
 
 //
@@ -59,13 +69,13 @@ void log_file::write_log(LOGI_TYPE log_lvl, const char *contxt, unsigned int len
     {
         switch(log_lvl)
         {
-            case LOGI_TYPE::LOGI_DEBUG:
-            case LOGI_TYPE::LOG_INFO:
-                debug_.lwrite(contxt, length);
-            case LOGI_TYPE::LOGI_WARN:
-                warn_.lwrite(contxt, length);
             case LOGI_TYPE::LOGI_ERROR:
                 error_.lwrite(contxt, length);
+            case LOGI_TYPE::LOGI_WARN:
+                warn_.lwrite(contxt, length);                
+            case LOGI_TYPE::LOG_INFO:
+            case LOGI_TYPE::LOGI_DEBUG:
+                debug_.lwrite(contxt, length);
             default:
             break;
         }
@@ -77,7 +87,7 @@ void log_file::write_log(LOGI_TYPE log_lvl, std::string file, int line, const ch
     if(log_lvl >= log_lvl_)
     {
         char txt_buf[MAX_FILE_LEN+1] = {'\0'};
-        std::string header = get_process_name() + " " + get_time_for_daytime() + " " + file+ ":" + std::to_string(line) + " ";
+        std::string header = log_flag_[log_lvl] + "" + get_process_name() + " " + get_time_for_daytime() + ">" + file+ ":" + std::to_string(line) + " ";
         memcpy(txt_buf, header.c_str(), header.length());
         
         va_list v_arg;
@@ -105,7 +115,7 @@ void log_file::show_log(LOGI_TYPE log_lvl, const char *format, ...)
             default:
             break;
         }
-        std::string header = color + get_time_for_daytime()+ " %s \x1b[0m";
+        std::string header = color + log_flag_[log_lvl] + get_time_for_daytime()+ " %s \x1b[0m";
 
         char txt_buf[MAX_FILE_LEN+1] = {'\0'};
         
@@ -118,7 +128,7 @@ void log_file::show_log(LOGI_TYPE log_lvl, const char *format, ...)
     }
 }
 
-#define LOG(LOG_LVL, fmt, ...) singleton<log_file>::get_instance()->show_log(LOG_LVL, ##__VA_ARGS__);\
+#define LOG(LOG_LVL, fmt, ...) singleton<log_file>::get_instance()->show_log(LOG_LVL, fmt, ##__VA_ARGS__);\
                                 singleton<log_file>::get_instance()->write_log(LOG_LVL, basename(__FILE__), __LINE__,fmt, ##__VA_ARGS__);
 
 #define LOG_SHOW(LOG_LVL, fmt, ...) singleton<log_file>::get_instance()->show_log(LOG_LVL,fmt, ##__VA_ARGS__);
