@@ -25,6 +25,9 @@ void tcp::network::delete_connect(int fd)
             con_map_.erase(it);
         }
     }
+    
+    event_loop_->delete_handler(fd);
+    ::close(fd);
 
     con->handle_close();
 }

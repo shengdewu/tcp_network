@@ -3,7 +3,8 @@
 class tconnect
 {
 public:
-    tconnect(){}
+    tconnect(int fd);
+    ~tconnect();
 
     virtual bool send_msg(char *data, unsigned int length);
 

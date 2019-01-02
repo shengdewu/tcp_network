@@ -10,10 +10,11 @@
 #include "log_file_io.h"
 
 
-enum class LOGI_TYPE
+enum class LOGI_LVL
 {
-    LOGI_DEBUG=0,
-    LOG_INFO,
+    LOGI_ALL = 0,
+    LOGI_DEBUG,
+    LOGI_INFO,
     LOGI_WARN,
     LOGI_ERROR,
 };
@@ -21,21 +22,21 @@ enum class LOGI_TYPE
 class log_file
 {
 public:
-    log_file(std::string dir="log"):debug_(dir, get_process_name(), "debug"),warn_(dir, get_process_name(), "warn"),error_(dir, get_process_name(), "error"),log_lvl_(LOGI_TYPE::LOGI_DEBUG)
+    log_file(std::string dir="log"):debug_(dir, get_process_name(), "debug"),warn_(dir, get_process_name(), "warn"),error_(dir, get_process_name(), "error"),log_lvl_(LOGI_LVL::LOGI_DEBUG)
     { 
         creat_dir(dir); 
-        log_flag_.insert(std::make_pair(LOGI_TYPE::LOGI_DEBUG, "<DEBUG "));
-        log_flag_.insert(std::make_pair(LOGI_TYPE::LOG_INFO, "<INFO "));
-        log_flag_.insert(std::make_pair(LOGI_TYPE::LOGI_WARN, "<WARN "));
-        log_flag_.insert(std::make_pair(LOGI_TYPE::LOGI_ERROR, "<ERROR "));
+        log_flag_.insert(std::make_pair(LOGI_LVL::LOGI_DEBUG, "<DEBUG "));
+        log_flag_.insert(std::make_pair(LOGI_LVL::LOGI_INFO, "<INFO "));
+        log_flag_.insert(std::make_pair(LOGI_LVL::LOGI_WARN, "<WARN "));
+        log_flag_.insert(std::make_pair(LOGI_LVL::LOGI_ERROR, "<ERROR "));
     }
     
     //日志
-    inline void write_log(LOGI_TYPE log_lvl, const char *contxt, unsigned int length);
+    inline void write_log(LOGI_LVL log_lvl, const char *contxt, unsigned int length);
     //日志
-    inline void write_log(LOGI_TYPE log_lvl, std::string file, int line, const char *format, ...);
+    inline void write_log(LOGI_LVL log_lvl, std::string file, int line, const char *format, ...);
     //显示日志
-    inline void show_log(LOGI_TYPE log_lvl, const char *format, ...);
+    inline void show_log(LOGI_LVL log_lvl, const char *format, ...);
     
 private:
     inline void creat_dir(std::string dir);
@@ -45,8 +46,8 @@ private:
     log_file_io debug_;
     log_file_io warn_;
     log_file_io error_;
-    LOGI_TYPE log_lvl_;
-    std::map<LOGI_TYPE, std::string> log_flag_;
+    LOGI_LVL log_lvl_;
+    std::map<LOGI_LVL, std::string> log_flag_;
 };
 
 //
@@ -63,18 +64,18 @@ void log_file::creat_dir(std::string dir)
     }
 }
 
-void log_file::write_log(LOGI_TYPE log_lvl, const char *contxt, unsigned int length)
+void log_file::write_log(LOGI_LVL log_lvl, const char *contxt, unsigned int length)
 {
     if(log_lvl >= log_lvl_)
     {
         switch(log_lvl)
         {
-            case LOGI_TYPE::LOGI_ERROR:
+            case LOGI_LVL::LOGI_ERROR:
                 error_.lwrite(contxt, length);
-            case LOGI_TYPE::LOGI_WARN:
+            case LOGI_LVL::LOGI_WARN:
                 warn_.lwrite(contxt, length);                
-            case LOGI_TYPE::LOG_INFO:
-            case LOGI_TYPE::LOGI_DEBUG:
+            case LOGI_LVL::LOGI_INFO:
+            case LOGI_LVL::LOGI_DEBUG:
                 debug_.lwrite(contxt, length);
             default:
             break;
@@ -82,7 +83,7 @@ void log_file::write_log(LOGI_TYPE log_lvl, const char *contxt, unsigned int len
     }
 }
 
-void log_file::write_log(LOGI_TYPE log_lvl, std::string file, int line, const char *format, ...)
+void log_file::write_log(LOGI_LVL log_lvl, std::string file, int line, const char *format, ...)
 {
     if(log_lvl >= log_lvl_)
     {
@@ -99,17 +100,17 @@ void log_file::write_log(LOGI_TYPE log_lvl, std::string file, int line, const ch
     }
 }
 
-void log_file::show_log(LOGI_TYPE log_lvl, const char *format, ...)
+void log_file::show_log(LOGI_LVL log_lvl, const char *format, ...)
 {
     if(log_lvl >= log_lvl_)
     {
         std::string color;
         switch(log_lvl)
         {
-            case LOGI_TYPE::LOGI_WARN:
+            case LOGI_LVL::LOGI_WARN:
                 color="\x1b[33m";
                 break;
-            case LOGI_TYPE::LOGI_ERROR:
+            case LOGI_LVL::LOGI_ERROR:
                 color="\x1b[31m";
                 break;
             default:
