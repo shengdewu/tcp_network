@@ -8,7 +8,7 @@
 #include <memory>
 #include "log_file.h"
 
-#define RING_MAX_SIZE (1024 * 1024 * 4)
+#define RING_MAX_SIZE (8)
 
 template<class T>
 class ring_queue
@@ -92,8 +92,9 @@ void ring_queue<T>::drop_out()
 template<class T>
 void ring_queue<T>::reallocate()
 {
-    _size = _size == 0 ? RING_MAX_SIZE :_size << 1;
-    std::shared_ptr<T> *pnewhead = new std::shared_ptr<T>[_size];
+    unsigned int size = _size == 0 ? RING_MAX_SIZE :_size << 1;
+
+    std::shared_ptr<T> *pnewhead = new std::shared_ptr<T>[size];
     unsigned int index = 0;
     while(_tail != _front)
     {
@@ -104,14 +105,14 @@ void ring_queue<T>::reallocate()
 
     _tail = 0;
     _front = index;
-
+    _size = size;
     if(_phead)
     {
         delete [] _phead;
     }
     _phead = pnewhead;
 
-    if(_size > 2 * RING_MAX_SIZE )
+    if(_size > RING_MAX_SIZE )
     {
         LOG(LOGI_LVL::LOGI_WARN, "队列过大:%s-%d\n", _key.c_str(), _front - _tail); 
     }
