@@ -41,7 +41,6 @@ private:
 
 void consumer::read_queue()
 {
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     std::shared_ptr<usr_data> data = queue_.pop();
 
     LOG(LOGI_LVL::LOGI_DEBUG, "data[%s-%s]\n", data->key.c_str(), data->name.c_str()); 
@@ -49,6 +48,7 @@ void consumer::read_queue()
 
 void consumer::write_queue()
 {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     std::shared_ptr<usr_data> data = std::make_shared<usr_data>();
     std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
     std::time_t now_c = std::chrono::system_clock::to_time_t(now - std::chrono::hours(24));
@@ -65,8 +65,8 @@ int main(int argc, char const *argv[])
 {
     consumer con;
  
-    while(true);
-    //std::this_thread::sleep_for(std::chrono::seconds(10));
+    //while(true);
+    std::this_thread::sleep_for(std::chrono::seconds(10000));
 
     return 0;
 }
