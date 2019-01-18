@@ -18,7 +18,7 @@ public:
 
 private:
 	active_thread(const active_thread &tp) = delete;
-	const &active_thread operator = (const active_thread &tp) = delete;
+	const active_thread& operator = (const active_thread &tp) = delete;
 
 private:
 	void loop();

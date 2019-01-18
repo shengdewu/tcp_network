@@ -20,7 +20,7 @@ active_thread::~active_thread()
 
 void active_thread::loop()
 {
-	while (_exit)
+	while (!_exit)
 	{
 		_func();
 	}

@@ -19,8 +19,8 @@ public:
 	void post(thread_func func);
 
 private:
-	thread_pool(const thread_pool &tp) = delete;
-	const &thread_pool operator = (const thread_pool &tp) = delete;
+	thread_pool(const thread_pool &tp)=delete;
+	const thread_pool& operator = (const thread_pool &tp)=delete;
 
 private:
 	void loop();

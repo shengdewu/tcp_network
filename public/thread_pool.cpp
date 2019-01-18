@@ -4,7 +4,7 @@
 thread_pool::thread_pool(unsigned int thread_num)
 : _exit(false)
 {
-	for (auto i = 0; i < thread_num; ++i)
+	for (unsigned int i = 0; i < thread_num; ++i)
 	{
 		_thread.emplace_back(std::make_shared<std::thread>(std::bind(&thread_pool::loop, this)));
 	}
@@ -16,7 +16,7 @@ thread_pool::~thread_pool()
 	_exit = true;
 	_condition.notify_all();
 
-	for (auto i = 0; i < _thread.size(); ++i)
+	for (unsigned int i = 0; i < _thread.size(); ++i)
 	{
 		_thread.at(i)->join();
 	}
@@ -32,14 +32,10 @@ void thread_pool::post(thread_func func)
 
 void thread_pool::loop()
 {
-	while (_exit)
+	while (!_exit)
 	{
-		if (_task_queue.empty())
-		{
-			std::unique_lock<std::mutex> lc(_condition_mtx);
-			_condition.wait(lc);
-			continue;
-		}
+		std::unique_lock<std::mutex> lk(_condition_mtx);
+		_condition.wait(lk, [this]{ return  !_task_queue.empty(); });
 
 		thread_func func = nullptr;
 		{
