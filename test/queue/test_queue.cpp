@@ -16,8 +16,9 @@ public:
         for(int i =0; i < 4; ++i)
         {
             input_thread.push_back(std::make_shared<active_thread>(std::bind(&consumer::write_queue, this)));
-            output_thread.push_back(std::make_shared<active_thread>(std::bind(&consumer::read_queue, this)));
         }
+
+        output_thread.push_back(std::make_shared<active_thread>(std::bind(&consumer::read_queue, this)));
 
     }
 
@@ -40,6 +41,7 @@ private:
 
 void consumer::read_queue()
 {
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     std::shared_ptr<usr_data> data = queue_.pop();
 
     LOG(LOGI_LVL::LOGI_DEBUG, "data[%s-%s]\n", data->key.c_str(), data->name.c_str()); 
@@ -64,6 +66,7 @@ int main(int argc, char const *argv[])
     consumer con;
  
     while(true);
+    //std::this_thread::sleep_for(std::chrono::seconds(10));
 
     return 0;
 }
