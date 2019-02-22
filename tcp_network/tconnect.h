@@ -3,13 +3,18 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <fcntl.h>
+
+class data_unit
+{
+
+};
 class tconnect
 {
 public:
     tconnect()_fd(-1){}
     ~tconnect(){}
 
-    virtual bool send_msg(char *data, unsigned int length);
+    virtual bool send_msg(const char *data, unsigned int length);
 
     void close_connect();
     void set_noblock();

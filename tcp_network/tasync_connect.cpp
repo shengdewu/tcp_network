@@ -4,7 +4,8 @@
 
 bool tasync_connect::handle_write_event()
 {
-
+    
+    return true;
 }
 
 bool tasync_connect::handle_read_event()
