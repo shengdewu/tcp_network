@@ -1,7 +1,7 @@
 #include "public/ring_queue.h"
 #include "public/active_thread.h"
 #include <chrono>
-
+#include <iostream>
 struct usr_data
 {
     std::string key;
@@ -60,13 +60,50 @@ void consumer::write_queue()
     queue_.push(data);
 }
 
+class location
+{
+public:
+	location(std::string name) :_name(name){}
+	~location()
+	{
+		std::cout << _name << " eixt..." << std::endl;
+	}
+
+private:
+	std::string _name;
+};
+
+class D
+{
+public:
+    void operator()(location *loc) const
+    {
+        std::cout << "call delete from function object..." << std::endl;
+        delete loc;
+        loc = nullptr;
+    }
+};
+
+std::vector<location> get_location()
+{
+	std::vector<location> loc;
+	for (int i = 0; i < 3; i++)
+	{
+		loc.push_back(location(std::to_string(i)));
+	}
+
+    std::cout << "return" << std::endl;
+	return loc;
+}
 
 int main(int argc, char const *argv[])
 {
-    consumer con;
- 
+    //consumer con;
+    {
+        std::shared_ptr<location> loc(new location("boofish"), D());
+    }
     //while(true);
-    std::this_thread::sleep_for(std::chrono::seconds(10000));
+    std::this_thread::sleep_for(std::chrono::seconds(10));
 
     return 0;
 }

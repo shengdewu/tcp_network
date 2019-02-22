@@ -5,11 +5,11 @@
 class event_handler
 {
 public:
-    event_handler(event_loop *loop, int efd):loop_(loop),efd_(efd),whandle_(false),rhandle_(true){}
+    event_handler(event_loop *loop):loop_(loop){}
 
     //通知事件
-    inline void notify_write_event();
-    inline void notify_read_event();
+    inline void notify_write_event(int fd);
+    inline void notify_read_event(int fd);
     inline void notify_error_event(){ handle_error_event(); };
 
 protected:
@@ -20,20 +20,19 @@ protected:
 
 private:
     //投递读写事件
-    inline void post_write_event();
-    inline void post_read_event();
+    inline void post_write_event(int fd);
+    inline void post_read_event(int fd);
     
-private:
+protected:
     event_loop *loop_;
-    int efd_;
+private:
     atomic<int> events_;
 }
 
 //
 //inline
 //
-
-inline void event_handler::notify_write_event()
+inline void event_handler::notify_write_event(int fd)
 {
     if(handle_write_event())
     {
@@ -45,7 +44,7 @@ inline void event_handler::notify_write_event()
     }
 }
 
-inline void event_handler::notify_read_event()
+inline void event_handler::notify_read_event(int fd)
 {
     if(handle_read_event())
     {
@@ -57,20 +56,20 @@ inline void event_handler::notify_read_event()
     }
 }
 
-inline void event_handler::post_write_event()
+inline void event_handler::post_write_event(int fd)
 {
     events_ |= EPOLLOUT;
     int t_event = events_;
-    loop_->update_event(EPOLL_CTL_MOD, efd_, t_event);
+    loop_->update_event(EPOLL_CTL_MOD, fd, t_event);
     events_ &= ~EPOLLOUT;
     
 }
 
-inline void event_handler::post_read_event()
+inline void event_handler::post_read_event(int fd)
 {
     events_ |= EPOLLIN;
     int t_event = events_;
-    loop_->update_event(EPOLL_CTL_MOD, efd_, t_event);
+    loop_->update_event(EPOLL_CTL_MOD, fd, t_event);
     events_ &= ~EPOLLIN;
     
 }
