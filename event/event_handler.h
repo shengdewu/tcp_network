@@ -17,8 +17,6 @@ protected:
     virtual bool handle_write_event() = 0;
     virtual bool handle_read_event() = 0;
     virtual void handle_error_event() = 0;
-
-private:
     //投递读写事件
     inline void post_write_event(int fd);
     inline void post_read_event(int fd);
