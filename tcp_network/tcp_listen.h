@@ -16,7 +16,6 @@ public:
 
 private:
     void listen_loop();
-    void set_noblock(int fd);
 
 private:
     int listen_fd_;
