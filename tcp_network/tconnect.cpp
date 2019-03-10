@@ -63,6 +63,11 @@ bool tconnect::recv_data()
 
 }
 
+void tconnect::shutdown_connect()
+{
+    shutdown(_fd, SHUT_RDWR);
+}
+
 void tconnect::close_connect()
 {
     shutdown(_fd, SHUT_RDWR);

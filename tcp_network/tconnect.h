@@ -26,6 +26,7 @@ public:
     int send_data(const char *data, unsigned int length);
 
     void close_connect();
+    void shutdown_connect();
     void set_noblock();
 
     inline void close();

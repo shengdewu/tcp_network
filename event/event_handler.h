@@ -5,7 +5,7 @@
 class event_handler
 {
 public:
-    event_handler(event_loop *loop):loop_(loop){}
+    event_handler(event_loop *loop):_loop(loop){}
 
     //通知事件
     inline void notify_write_event(int fd);
@@ -22,9 +22,9 @@ protected:
     inline void post_read_event(int fd);
     
 protected:
-    event_loop *loop_;
+    event_loop *_loop;
 private:
-    atomic<int> events_;
+    atomic<int> _events;
 }
 
 //
@@ -56,18 +56,18 @@ inline void event_handler::notify_read_event(int fd)
 
 inline void event_handler::post_write_event(int fd)
 {
-    events_ |= EPOLLOUT;
-    int t_event = events_;
-    loop_->update_event(EPOLL_CTL_MOD, fd, t_event);
-    events_ &= ~EPOLLOUT;
+    _events |= EPOLLOUT;
+    int t_event = _events;
+    _loop->update_event(EPOLL_CTL_MOD, fd, t_event);
+    _events &= ~EPOLLOUT;
     
 }
 
 inline void event_handler::post_read_event(int fd)
 {
-    events_ |= EPOLLIN;
-    int t_event = events_;
-    loop_->update_event(EPOLL_CTL_MOD, fd, t_event);
-    events_ &= ~EPOLLIN;
+    _events |= EPOLLIN;
+    int t_event = _events;
+    _loop->update_event(EPOLL_CTL_MOD, fd, t_event);
+    _events &= ~EPOLLIN;
     
 }

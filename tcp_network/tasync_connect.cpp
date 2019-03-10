@@ -54,29 +54,7 @@ bool tasync_connect::handle_write_event()
 
 bool tasync_connect::handle_read_event()
 {
-    int buf_len = 8192;
-    const char *buf[buf_len] = {'\0'};
-
-    int len = recv(_fd, buf, buf_len, MSG_NOSIGNAL);
-
-    if(len > 0)
-    {
-        handle_network_data(buf, buf_len);
-    }
-    else 
-    {
-        if (len <= 0)
-        {
-            if(errno==EAGAIN || errno == EWOULDBLOCK)
-            {
-                return true;
-            }
-
-            return true;
-        }
-    }
-
-    return true;
+    return recv_data();
 }
 
 void tasync_connect::handle_error_event()
