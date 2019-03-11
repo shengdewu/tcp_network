@@ -59,7 +59,7 @@ bool tasync_connect::handle_read_event()
 
 void tasync_connect::handle_error_event()
 {
-    LOG_FILE(LOGI_LVL::LOGI_ERROR, "socket[%d] is closed:[%s]\n", _fd, std::strerror(errno).c_str());
+    LOG_FILE(LOGI_LVL::LOGI_ERROR, "socket[%d] is closed:[%s]\n", _fd, std::strerror(errno));
     close_connect();
     loop_->delete_handler(_fd);
 }
