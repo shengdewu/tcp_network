@@ -1,4 +1,5 @@
 #include "tasync_connect.h"
+#include  "public/active_thread.h"
 
 class tclient_connect : public tasync_connect
 {
@@ -10,10 +11,13 @@ public:
 public:
     virtual  void handle_create(){}
     virtual  void handle_close(){}
+    virtual  void send_heart();
 
 private:
-    bool reconenct();
+    void reconenct();
     bool connect_server();
+    void keep_alive();
     std::string _ip;
     unsigned int _port;
+    std::shared_ptr<active_thread> _probe;
 };

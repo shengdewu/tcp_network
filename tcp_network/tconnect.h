@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
-
+#include <atomic>
 class data_unit
 {
 public:
@@ -19,8 +19,8 @@ public:
 class tconnect
 {
 public:
-    tconnect()_fd(-1){}
-    ~tconnect(){}
+    tconnect()_fd(-1),_running(false),_send_time(0){}
+    ~tconnect(){ _running=true; }
 
     // > 0 发送字节 < 0 发送失败
     int send_data(const char *data, unsigned int length);
@@ -39,4 +39,6 @@ protected:
 
 protected:
     int _fd;
+    std::atomic<bool> _running;
+    std::time_t _send_time;
 };
