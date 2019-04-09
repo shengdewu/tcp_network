@@ -14,7 +14,8 @@ protected:
     //网络消息
     virtual  void handle_create(){}
     virtual  void handle_close(){}  
-
+    void resend_data();
+    
 private:
     //处理通知事件
     virtual  bool handle_write_event() override final;

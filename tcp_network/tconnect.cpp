@@ -74,6 +74,7 @@ void tconnect::close_connect()
 {
     shutdown(_fd, SHUT_RDWR);
     close(_fd);
+    _running = false;
 }
 
 void tconnect::set_noblock()
