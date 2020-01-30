@@ -45,7 +45,7 @@ bool tclient_connect::connect_server()
 
     _loop->register_event(_fd, this);
     
-    LOG(LOGI_LVL::LOGI_INFO, "Á¬½Ó·şÎñÆ÷³É¹¦:[%s£º%d-%d]\n", _ip.c_str(), _port, _fd);
+    LOG(LOGI_LVL::LOGI_INFO, "è¿æ¥æœåŠ¡å™¨æˆåŠŸ:[%sï¼š%d-%d]\n", _ip.c_str(), _port, _fd);
 
     _running = true;
 
@@ -56,7 +56,7 @@ void tclient_connect::reconenct()
 {
     while(!_running && -1 == _fd)
     {
-        LOG(LOGI_LVL::LOGI_WARN, "³¢ÊÔÖØÁ¬·şÎñÆ÷:[%s£º%d]\n", _ip.c_str(), _port);
+        LOG(LOGI_LVL::LOGI_WARN, "å°è¯•é‡è¿æœåŠ¡å™¨:[%sï¼š%d]\n", _ip.c_str(), _port);
         if(connect_server())
         {
             resend_data();
@@ -80,7 +80,7 @@ void tclient_connect::keep_alive()
     {
         if(diff > 60 * 10)
         {
-            LOG(LOGI_LVL::LOGI_WARN, "·şÎñÆ÷Òì³£¶Ï¿ª:[%s£º%d-%d]\n", _ip.c_str(), _port, _fd);
+            LOG(LOGI_LVL::LOGI_WARN, "æœåŠ¡å™¨å¼‚å¸¸æ–­å¼€:[%sï¼š%d-%d]\n", _ip.c_str(), _port, _fd);
             handle_error_event();
         }
         else if(diff > 3 * 60)
@@ -89,10 +89,9 @@ void tclient_connect::keep_alive()
         }
         else
         {
-            LOG_FILE(LOGI_LVL::LOGI_INFO, "ĞÄÌø¼ì²â´¥·¢:[%s£º%d-%d]\n", _ip.c_str(), _port, _fd);
+            LOG_FILE(LOGI_LVL::LOGI_INFO, "å¿ƒè·³æ£€æµ‹è§¦å‘:[%sï¼š%d-%d]\n", _ip.c_str(), _port, _fd);
         }
     }
 
     std::this_thread::sleep_for(std::chrono::seconds(20));
 }
-
