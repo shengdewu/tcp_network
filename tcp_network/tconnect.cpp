@@ -10,12 +10,14 @@ int tconnect::send_data(const char *data, unsigned int length)
         if(sendl > 0)
         {
             remain -= sendl;
+            _send_time = std::time(nullptr);
         }
         else
         {
             if(errno != EAGAIN)
             {
                 LOG_FILE(LOGI_LVL::LOGI_ERROR, "the socket send failed [%d]-[%s]\n", fd_, strerror(errno));
+                _send_time = 0;
                 return -1;
             }
 
@@ -72,6 +74,7 @@ void tconnect::close_connect()
 {
     shutdown(_fd, SHUT_RDWR);
     close(_fd);
+    _running = false;
 }
 
 void tconnect::set_noblock()
